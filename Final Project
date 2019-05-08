@@ -1,0 +1,92 @@
+##Tianqi Luo
+
+
+## Immigration Pattern
+
+In this part, we're looking at the datasets for the immigrations to Barcelona. We will be looking at the datasets nationality, age group and sex from the Barcelona data. We will try to analyze graphically to see if there is a pattern between the immigration to Barcelona between these variables. 
+
+## Intial Hypothese
+
+1. Without analysis, we assume that there will be a lot of Spanish-speaking countries that have immigrants to Spain, considering they speak the same language. European countries might not have a strong presence in immigration because of the current economical crisis in Spain. 
+
+2. We assume that the younger age grouops from 20-30 would make up the majority of the immigrants, whereas age groups 50 years older or 10 years younger would be minimal. 
+
+3. We assume males would make up a much larger portion of immigrants than females. 
+
+Now, let's look at the data! 
+
+
+**Load packages and datasets necessary**
+```{r}
+library(tidyverse)
+library(ggplot2)
+immigration_nationality = read.csv("./nationality.csv")
+immigration_age = read.csv("./age.csv")
+immigration_sex = read.csv("./sex.csv")
+```
+
+
+**Clean the data using dplyr, filter out the year 2017, group by nationality, and find the total immigrant numbers by nationality, find the countries with immigrants more than 1000**
+```{r}
+immigration_nationality %>%
+  filter(Year == 2017) %>%
+  select(Year, District.Name, Nationality, Number) %>%
+  group_by(Nationality) %>%
+  summarize(TotalNumber = sum(Number)) %>%
+  arrange(desc(TotalNumber)) %>%
+  filter(Nationality != "Spain") %>%
+  filter(TotalNumber > 1000) ->tidy_immigration_nationality
+```
+
+**Use a barplot to analyze the data**
+```{r}
+ggplot(tidy_immigration_nationality, aes(x =Nationality, y = TotalNumber, fill = Nationality)) + 
+  geom_bar(stat = "identity") + 
+  xlab("District Numbers") + 
+  ylab("Immigrant Number") + 
+  coord_flip()
+```
+
+We can see from our data, Italy actually has the largest immigrants, then Venezuela, Peru, Pakistan, Colombia, China, all have significant immigrants numbers. So our assumption was partially true, Spanish-speaking countries do make up a significant part of the immigration. However, European immigrants, Asian immigrants also comprise a significant portion. 
+
+**Let's confirm our result from the dataset**
+```{r}
+head(tidy_immigration_nationality)
+```
+
+We can see from the table, ost immigrants come from Italy at 6,309, then China at 3,299, Colombia at 3,255, Venezuela at 3,021 then Pakistan at 2,967. 
+
+Next, we will look at the immigration data based on age groups. 
+
+
+**Let's draw a boxplot to see how the immigrants of different age groups are distributed in different district. Each dot represent the immigrant number of the each neighborhood in the district. The deeper the color is, the denser the distribution is**
+```{r}
+ggplot(immigration_age, aes(x = Age, y = Immigrants, color = Age, fill = Age)) + 
+  geom_boxplot() + 
+  facet_wrap(~ District.Name) + 
+  xlab("District Names") + 
+  ylab("Immigrant Number") +
+  coord_flip()
+```
+
+We can see from the boxplot that Ciutat Vella, Exiample, Gracia and Sants-Montjuic attract the most immigrants. We can see the green plots, namely the ones representing age grouop from 25-50 are thicker and have a wider distribution. As the plots turn bluer and redder, the plots are sparser and thinner. From the boxplot, we can see that age group 25-50 indeed have the largest immigrant numbers and they have a wider variance of distribution between each district. So our hypotheses were close. 
+
+
+Next, we look at the immigrants based on gender. 
+
+
+**Let's draw a boxplot based on the distribution of male immigrants and females immigrants in different districts. Each dot represents the number of immigrants in each district. The deeper the color, the more immigrants. The longer the plots are, the wider range of distribution**
+```{r}
+immigration_sex %>%
+  mutate(District.Name = iconv(District.Name, "latin1", "UTF-8")) ->
+  immigration_sex_2
+
+ggplot(immigration_sex_2, aes(x = Gender, y = Immigrants, color = Gender, fill = Gender)) + 
+  geom_boxplot() + 
+  facet_wrap(~ District.Name) + 
+  xlab("District Names") + 
+  ylab("Immigrant Number") + 
+  coord_flip()
+```
+
+We can see from the plots that, the immigrant numbers between males are similar. Although to our contrary, the female immigrants are not that much different from male immigrants, even surpassing them in some districts. Also, the female immigrants have a wider distribution, namely a bigger variance in a lot of districts. Again, the districts that attract the most immigrants are Ciutat Vella, Eixample, Grecia and Les Corts. 
