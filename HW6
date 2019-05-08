@@ -1,0 +1,241 @@
+#Stat 612 HW 7
+
+##Tianqi Luo
+
+##Problem 1
+
+**(1)**
+```{r}
+library(tidyverse)
+library(babynames)
+help(package = "babynames")
+```
+
+**The package has four datasets:: applicants, babynames, births, lifetables**
+
+
+**Applicant dataset**
+```{r}
+applicants %>%
+  count(year, sex) %>%
+  filter(n>1)
+```
+Year, and sex and the keys for the applicants dataframe. 
+
+
+**Babynames dataset**
+```{r}
+babynames %>%
+  count(year, sex, name) %>%
+  filter(n>1)
+```
+Year, sex and name are the keys for babynames dataframe. 
+
+
+**Births dataset**
+```{r}
+births %>%
+  count(year) %>%
+  filter(n>1)
+```
+Year is the key for births dataset. 
+
+
+**Lifetables dataset**
+```{r}
+lifetables %>%
+  count(x, sex, year) %>%
+  filter(n>1)
+```
+X, sex and year are the keys for lifetables dataset. 
+
+
+
+**(2)**
+```{r}
+library(nasaweather)
+help(package = "nasaweather")
+```
+
+**The package has five datasets: atmos, borders, elev, glaciers, storms. **
+
+**Atmos dataset**
+```{r}
+atmos %>%
+  count(year, month, lat, long) %>%
+  filter(n>1)
+```
+Year, month, lat, long are the keys for atmos. 
+
+
+**Borders dataset**
+```{r}
+borders %>%
+  count(country, long, lat, group) %>%
+  filter(n>1)
+```
+Borders dataset doesn't have a key. 
+
+
+**Elev dataset**
+```{r}
+elev %>%
+  count(long, lat) %>%
+  filter(n>1)
+```
+Long, lat are the keys for dataset elev. 
+
+
+**Glaciers dataset**
+```{r}
+glaciers %>%
+  count(id) %>%
+  filter(n>1)
+```
+ID is the key for glaciers dataset. 
+
+
+**Storms dataset**
+```{r}
+storms %>%
+  count(name, year, month, day, hour, lat) %>%
+  filter(n>1)
+```
+Name, year, month, day, hour and lat are the keys for dataset storms. 
+
+
+##Problem 2
+
+**(1)**
+```{r}
+library(Lahman)
+help("Lahman-package")
+```
+
+
+
+
+**(2)**
+
+**Filter out all the teams that have won the league since 1903, build a new dataset**
+```{r}
+Teams %>%
+  filter(yearID >= 1903 & LgWin == "Y" & teamID == "BOS") ->
+  tidyteams
+```
+
+
+**Inner join the new dataset with Fielding by teamID and yearID**
+```{r}
+tidy_teams_fielding = inner_join(Fielding, tidyteams, by = c("yearID", "teamID"))
+```
+
+**Inner join the new dataset by Master to get the names of the players**
+```{r}
+tidy_master = inner_join(tidy_teams_fielding, Master, by = "playerID")
+```
+
+
+**Select the variables needed and arrange the players by their last name**
+```{r}
+tidy_master %>%
+  select(nameFirst, nameLast, yearID) %>%
+  group_by(nameFirst, nameLast, yearID) %>%
+  slice(1) %>%
+  arrange(nameLast) -> final_tidy_master
+
+head(final_tidy_master, n = 10)
+```
+
+**(3)**
+
+
+
+
+**(a)**
+
+**Right join the Batting with Salaries by playerID and yearID**
+```{r}
+batting_salaries = right_join(Batting, Salaries, by = c("playerID", "yearID"))
+```
+
+**Left join the new dataset with Master to get the names of the players**
+```{r}
+tidy_salary = left_join(batting_salaries, Master, by = c("playerID"))
+```
+
+**Select the needed variables of the new dataset and arrange the players by their last name, this is the dataset for the salary for each player each year**
+```{r}
+tidy_salary %>%
+  select(yearID, nameFirst, nameLast, salary) %>%
+  arrange(nameLast) ->
+  final_tidy_salary
+
+head(final_tidy_salary, n = 10)
+```
+
+
+**(b)**
+
+**Left join the Batting and Master to find out the names of the players for Batting**
+```{r}
+tidy_batting = left_join(Batting, Master, by = "playerID")
+```
+
+**Select the needed variables and arrange the players by their last name, build a new dataset, this is the dataset for at bats and hits for each player in a year**
+```{r}
+tidy_batting %>%
+  select(yearID, nameFirst, nameLast, AB, H) %>%
+  arrange(nameLast) ->
+  final_tidy_batting
+
+head(final_tidy_batting, n = 10)
+```
+
+**(4)**
+
+**Left join the previous built new datasets, by yearID, nameFirst, and name Last, create a new data**
+```{r}
+tidy_batting_salary = left_join(final_tidy_batting, final_tidy_salary, by = c("yearID", "nameFirst", 
+                                                                            "nameLast"))
+```
+
+**Filter the AB and yearID, mutate a variable named BattingAverage with AB/H, and select the needed variables, and arrange the players by their last name**
+```{r}
+tidy_batting_salary %>%
+  filter(AB >=400 & yearID >=1985) %>%
+  mutate(BattingAverage = AB/H) %>%
+  group_by(yearID, nameFirst, nameLast) %>%
+  select(yearID, nameFirst, nameLast, BattingAverage, salary) %>%
+  arrange(nameLast) -> final_tidy_batting_salary
+
+head(final_tidy_batting_salary, n = 10)
+```
+
+**We pick a particular player Bobby Abreu to see how his salary is associated with his batting average**
+
+
+```{r}
+final_tidy_batting_salary %>%
+  filter(nameFirst == "Bobby" & nameLast == "Abreu")
+```
+
+**We can see that, as Bobby's batting average increases, so does his salary, especially after 2000, we can assume either he gets a really big contract after his rookie years or the sports teams are becoming more tech savvy. However, as a player ages and reaches the late stages of his career, the batting averages no longer matter that much as the salary will be dwindled due to the players aging. **
+
+
+
+
+
+**(5)**
+
+**We used the final_tidy_salary data we built from above, and filter out the YearID and nameFirst variables**
+```{r}
+final_tidy_salary %>%
+  filter( (yearID >=1985) & (yearID %% 2 == 0) & (nameFirst == "John")) %>%
+  group_by(yearID, nameFirst, nameLast, salary) %>%
+  slice(1) %>%
+  arrange(desc(salary)) ->
+  final_tidy_salary_john
+
+head(final_tidy_salary_john, n = 10)
+```
