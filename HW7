@@ -1,0 +1,239 @@
+##Stat 612 HW7
+
+##Tianqi Luo
+
+##Problem 1
+
+**(1)**
+```{r}
+library(tidyverse)
+```
+
+
+**Read in the table**
+```{r}
+scrabble = read.table("https://dcgerard.github.io/stat_412_612/data/words.txt")
+
+head(scrabble)
+```
+
+**Tidy the scrabble data**
+```{r}
+scrabble %>%
+  rename(word = 1) %>%
+  slice(-1) ->
+
+  tidy_scrabble
+
+head(tidy_scrabble)
+```
+
+
+**(2)**
+```{r}
+tidy_scrabble %>%
+  filter(str_detect(word, "(^X* | *X$)")) ->
+  tidy_scrabble_x
+
+head(tidy_scrabble_x)
+```
+
+```{r}
+tidy_scrabble_x %>%
+  summarize(count = length(word))
+```
+
+**There are 577 words that begin or end in "X"**
+
+
+**(3)**
+
+```{r}
+tidy_scrabble %>%
+  filter(str_detect(word, ("A"))) %>%
+  filter(str_detect(word, ("E"))) %>%
+  filter(str_detect(word, ("I"))) %>%
+  filter(str_detect(word, ("O"))) %>%
+  filter(str_detect(word, ("U"))) ->
+  tidy_scrabble_vowels
+
+head(tidy_scrabble_vowels)
+```
+
+
+```{r}
+tidy_scrabble_vowels %>%
+  summarize(count = length(word))
+```
+
+**There are 3476 words that contain all of the vowels**
+
+
+**(4)**
+```{r}
+tidy_scrabble_vowels %>%
+  mutate(count = str_length(word)) %>%
+  arrange(count) %>%
+  filter(count == min(count))
+```
+
+**The words are DOULEIA, EULOGIA, MIAOUED, MOINEAU and SEQUOIA**
+
+**(5)**
+
+**Use string_replace to replace the first letter with the last letter**
+```{r}
+tidy_scrabble %>%
+  mutate(word2 = str_replace(word, "(^.)(.*)(.$)", "\\3\\2\\1")) ->
+  tidy_scrabble_letters
+
+head(tidy_scrabble_letters)
+```
+
+
+**Select the dataframe with the original words**
+```{r}
+tidy_scrabble_letters %>%
+  dplyr::select(word) -> original_words
+
+head(original_words)
+```
+
+```{r}
+tidy_scrabble_letters %>%
+  dplyr::select(word2) %>%
+  rename(word = word2) -> new_words
+
+head(new_words)
+```
+
+**Create a new dataframe stillwords by using inner_join**
+```{r}
+still_words = inner_join(original_words, new_words, by = "word")
+
+head(still_words)
+```
+
+```{r}
+still_words %>%
+  summarize(count = length(word))
+```
+**21286 of them are still words**
+
+
+**(6)**
+
+**Use filter to create a new dataframe with still_words but with different first and last letters**
+```{r}
+still_words %>%
+  mutate(FirstLetter = str_sub(word, 1, 1), LastLetter = str_sub(word, -1, -1)) %>%
+  filter(FirstLetter != LastLetter) -> still_words_different_letters
+
+head(still_words_different_letters)
+```
+
+
+```{r}
+still_words_different_letters %>%
+  summarize(count = length(word))
+```
+
+**There are 1694 words that are still words but have different letters**
+
+`**(7)**
+
+**Create a count variable by counting the lengths of the strings, and sort it in descending order**
+```{r}
+still_words_different_letters %>%
+  mutate(count = str_length(word)) %>%
+  arrange(desc(count)) %>%
+  filter(count == max(count))
+```
+
+**The longest words are RECOMMISSIONED, REMYTHOLOGISED, REMYTHOLOGIZED, DECOMMISSIONER, DEMYTHOLOGISER and DEMYTHOLOGIZER**
+  
+  
+
+**(8)**
+
+**Create a new dataframe by counting the consecutive consonants with string length greater than 5, and sort them in descending order**
+```{r}
+tidy_scrabble %>%
+  mutate(y =  str_match(word, "[^AEIOU]{5,}")) %>%
+  filter( y != "NA") %>%
+  mutate(count = str_length(y)) %>%
+  arrange(desc(count)) -> tidy_scrabble_consecutive_consonants
+
+head(tidy_scrabble_consecutive_consonants)
+```
+
+**We can see that the word SULPHHYDRYLS has the longest consecutive consecutive consonant string at length 10**
+
+
+**Build another dataframe to include Y as the consonant**
+```{r}
+tidy_scrabble %>%
+  mutate(y =  str_match(word, "[^AEIOUY]{5,}")) %>%
+  filter( y != "NA") %>%
+  mutate(count = str_length(y)) %>%
+  arrange(desc(count)) -> tidy_scrabble_consecutive_consonant_y
+
+head(tidy_scrabble_consecutive_consonant_y)
+```
+**We can see the longest word with consecutive consonants without Y is TSKTSKS with a consecutive consonant string at length 7**
+
+
+##Problem 2
+
+**Build the function**
+```{r}
+my_d_parser = function(string, pattern) {
+  new_string = str_replace_all(string, "[[:punct:]]+", " ")
+  new_format = str_replace_all(pattern, "[[:punct:]]+", " ")
+  number_string = unlist(str_split(new_string, " "))
+  k = unlist(str_split(new_format, " "))
+  number_string = number_string[number_string != ""]
+  k = k[k!=""]
+  new_number_string = c(number_string[k == "Y"], number_string[k == "m"], number_string[k == "d"])
+  as.numeric(new_number_string)
+}
+```
+
+```{r}
+pattern
+str_replace_all(pattern, '[[:punct:]]+', ' ')
+gsub('[[:punct:] ]+', ' ', pattern)
+```
+
+```{r}
+string = "1999, 10, 21"
+pattern = "#Y, #d, #m"
+new_string = str_replace_all(string, '[[:punct:]]+', ' ')
+new_pattern = str_replace_all(pattern, '[[:punct:]]+', ' ')
+k = unlist(str_split(new_string, " "))
+k = k[k!= ""]
+j = unlist(str_split(new_pattern, " "))
+j = j[j!= ""]
+j[2]
+```
+
+**Test 1**
+```{r}
+pattern = "#Y, #d, #m"
+string = "1999, 10, 21"
+my_d_parser(string, pattern)
+```
+
+**Test 2**
+```{r}
+pattern = "#d-#Y, #m"
+string = "07-1872, 01"
+my_d_parser(string, pattern)
+```
+
+**Test 3**
+```{r}
+pattern = "#m/#d/#Y"
+string = "09/13/1789"
+my_d_parser(string, pattern)
+```
