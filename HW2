@@ -1,0 +1,101 @@
+##Problem 1##
+```{r}
+library(tibble)
+matrix_and_tibble = function(n){ 
+  mat = matrix(nrow = n, ncol = n)
+  for(i in 1:n){
+    
+  
+  mat[i,] = 1/(seq(i, n+i-1))
+  
+  }
+  mat_new = rbind(mat, colSums(mat))
+  
+  position = which(mat_new > 0.12 & mat_new < 0.15, TRUE)
+  value = mat_new[mat_new > 0.12 & mat_new < 0.15]
+  
+  final_tibble = as.tibble(cbind(position, value))
+  
+  print(mat_new)
+  print(final_tibble)
+}
+
+```
+
+```{r}
+matrix_and_tibble(5)
+```
+
+```{r}
+matrix_and_tibble(10)
+```
+
+
+
+
+
+
+
+
+##Problem 2##
+```{r}
+fizzbuzz = function(x){
+  
+if((x %% 3 == 0) & (x %% 5 == 0))
+{
+  "fizzbuzz"
+}
+else if(x %% 3 ==0 ) { 
+  "fizz"
+} 
+else if(x %% 5 == 0) {
+  "buzz"
+} else{
+        return(x)}
+  }
+
+```
+
+```{r}
+fizzbuzz(3)
+fizzbuzz(5)
+fizzbuzz(15)
+fizzbuzz(2)
+```
+
+##Problem 3##
+```{r}
+temp = function(x) {
+  cut(x, breaks = c(-Inf, 0, 10, 20, 30, Inf), labels = c("freezing", "cold", "cool", "warm", "hot"))
+      
+}
+```
+
+
+```{r}
+temp(31)
+temp(30)
+temp(10)
+temp(-10)
+```
+
+**If used "<" instead of "<=", we need to add right = TRUE to the end of the function**
+```{r}
+new_temp = function(x) {
+  cut(x, breaks = c(-Inf,0 , 10, 20, 30, Inf), labels = c("freezing", "cold", "cool", "warm", "hot"), right = TRUE)
+      
+}
+
+
+```
+**It's better to use cut function because it's using the cutoffs as one single vector in breaks, so it's easier to implemenet in one sentence instead of writing out multiple sentences of if-else statements**
+
+
+##Problem 4##
+```{r}
+library(magrittr)
+var = sample(1:10, 1000, replace = T)
+var %>%
+  mean() %>%
+  exp()
+```
