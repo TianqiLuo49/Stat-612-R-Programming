@@ -1,0 +1,176 @@
+##Homework 5##
+
+##Tianqi Luo##
+
+
+##Problem 1##
+
+**(a)**
+```{r}
+baltimore_crime = read.csv("./BaltimoreCrime.csv")
+```
+
+```{r}
+head(baltimore_crime)
+```
+
+
+**(b)**
+
+**Parse the time values with format "%H%M" and drop the ones with NAs(the ones with format "%H:%M:%S")**
+```{r}
+library(tidyverse)
+baltimore_crime %>%
+  mutate(CrimeTime = parse_time(CrimeTime, format = "%H%M")) %>%
+  drop_na(CrimeTime) -> 
+  fixed_location
+
+head(fixed_location) %>%
+  dplyr:: select(CrimeDate, CrimeTime, CrimeCode, Location)
+```
+
+
+**Parse the number with the format "%H:%M:%S", replace the NAs with the time values parsed from "%H%M"**
+```{r}
+baltimore_crime %>%
+  mutate(CrimeTime = parse_time(CrimeTime, format = "%H:%M:%S")) %>%
+  replace_na(list(CrimeTime = fixed_location$CrimeTime)) ->
+  baltimore_crime_clean
+
+head(baltimore_crime_clean, n = 50) %>%
+  dplyr::select(CrimeDate, CrimeTime, CrimeCode, Location)
+```
+
+**Check for NAs**
+```{r}
+baltimore_crime_clean %>%
+  filter(is.na(CrimeTime)) 
+```
+**We can see that all values in CrimeTime have been fixed**
+
+
+
+**(c)**
+
+**Filter the ones where locations are blank, get rid of the parenthesis, separate into different columns by ","**
+```{r}
+baltimore_crime_clean %>%
+  filter(Location.1 != "") %>%
+  mutate(Location.1 = str_replace(Location.1, "[()]", "")) %>%
+  separate(Location.1, into = c("LocationLat", "LocationLon"), sep = ",") ->
+  baltimore_crime_clean_location
+
+head(baltimore_crime_clean_location) %>%
+  dplyr::select(LocationLat, LocationLon)
+```
+
+
+
+**(d)**
+
+**Calculate the total crime numbers**
+```{r}
+baltimore_crime_clean %>%
+  dplyr::select(CrimeTime) %>%
+  summarize(TotalCrime = length(CrimeTime))
+```
+
+**Filter out the time between 0:00:00 and 04:00:00, using as.numeric to convert the time values into seconds, so between 0 and 14400 seconds, and calculate the percentage**
+```{r}
+baltimore_crime_clean %>%
+  dplyr::select(CrimeTime) %>%
+  mutate(CrimeTime = as.numeric(CrimeTime)) %>%
+  filter(CrimeTime >= 0 & CrimeTime <= 14400) %>%
+  summarize(TotalCrimeInThePeriod = length(CrimeTime), Percentage = length(CrimeTime)/344387)
+```
+**The crime rate between midnight and 4:00 am is 14.03%**
+
+
+##Problem 2
+
+**Load the data and the packages**
+```{r}
+billboard = read.csv("/Users/naughtyboy35/Desktop/Stat 612/hw/hw5/billboard.csv")
+library(tidyr)
+```
+
+
+**(a)**
+
+**Gather up all the week entries into a row**
+```{r}
+billboard %>%
+  gather(c("wk1" : "wk76"), key = "week", value = "rating", na.rm = TRUE) %>%
+  arrange(artist) %>%
+  dplyr::select(year, artist, track, time, week, rating, date.entered) -> tidybillboard_1
+
+head(tidybillboard_1)
+```
+
+
+**(b)**
+
+**Convert the week variable to a number and calculate the dates**
+```{r}
+tidybillboard_1 %>%
+  mutate(week = parse_number(week)) %>%
+  mutate(date = as.character(parse_date(date.entered) + (week-1)* 7)) %>%
+  dplyr::select(year, artist, track, time, week, rating, date) ->
+  
+  tidybillboard_2
+
+head(tidybillboard_2)
+```
+  
+
+**(c)**
+
+**Sort the data by arist, track and week**
+```{r}
+tidybillboard_2 %>%
+  arrange(artist, track, week) ->
+  tidybillboard_3
+
+head(tidybillboard_3)
+```
+
+
+##Problem 3
+
+**Load the data**
+```{r}
+iris = read.table("./Iris2.txt")
+```
+
+
+**Clean the data, separate it into four variables by ","**
+```{r}
+iris %>%
+  separate("V1", into = c("Sepal_Length", "Sepal_Width", "Petal_Length", "Petal_Width", "Species"), sep = ",") %>%
+  mutate(Species = gsub("Iris-", "", Species)) ->
+  iris_clean
+head(iris_clean)
+```
+
+
+**Gather all the variables into one variables called "PlanetPartDimension", and then separate it into "PlanetPart" and "Dimension", also parse the value**
+```{r}
+iris_clean %>%
+  gather(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width, key = "PlantPartDimension", value = "Value") %>%
+  separate("PlantPartDimension", into = c("PlantPart", "Dimension"), sep = "_") %>% 
+  mutate(Value = parse_number(Value)) ->
+  iris_clean_2
+
+head(iris_clean_2)
+```
+
+
+**Plot the boxplot, use facet_grid to facet the graphs by PlantPart and Dimension**
+```{r}
+library(ggplot2)
+ggplot(iris_clean_2, aes(x = Species, y = Value)) + 
+  geom_boxplot() + 
+  facet_grid(PlantPart ~ Dimension) + 
+  theme_bw()+ 
+  theme(strip.background = element_rect(fill = "white"))
+```
