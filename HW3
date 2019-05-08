@@ -1,0 +1,124 @@
+##1##
+```{r}
+library(ggplot2)
+data("msleep")
+```
+
+##2##
+```{r}
+nrow(msleep)
+ncol(msleep)
+```
+**There are 83 mammals and 11 variables in this dataframe**
+
+##3##
+
+**Use body weight as the explanatory variable and sleep total as the response variable**
+```{r}
+ggplot(msleep, aes(x = bodywt, y = sleep_total), xlab = "Sleep Total", ylab = "Body Weight") +
+  geom_point() +
+  xlab("Body Weight") + 
+  ylab("Sleep Total") + 
+  geom_smooth(se = F, method = "loess")
+```
+**We can see there is a curved relationship in the plot**
+
+
+##4##
+
+**Log-Transform X**
+```{r}
+ggplot(msleep, aes(x = log(bodywt), y = sleep_total)) +
+  geom_point() +
+  xlab("Body Weight") + 
+  ylab("Sleep Total") + 
+  geom_smooth(se = F, method = "loess")
+```
+
+**Log-Transform Y**
+```{r}
+ggplot(msleep, aes(x = bodywt, y = log(sleep_total))) +
+  geom_point() +
+  xlab("Body Weight") + 
+  ylab("Sleep Total") + 
+  geom_smooth(se = F, method = "loess")
+```
+
+
+**Log-Transform both X and Y**
+```{r}
+ggplot(msleep, aes(x = log(bodywt), y = log(sleep_total))) +
+  geom_point() +
+  xlab("Body Weight") + 
+  ylab("Sleep Total") + 
+  geom_smooth(se = F, method = "loess")
+```
+
+**We can see from the graphs above, when we log-transform both the explanatory and the response variable, the linear relationship is more apparent. As a result, we would log-transform both explanatory and response variables**
+
+
+##5##
+```{r}
+p = ggplot(msleep, aes(x = log(bodywt), y = log(sleep_total), color = vore)) +
+  geom_point() +
+  xlab("Body Weight") +
+  ylab("Sleep Total")+
+  ggtitle("Body Weight vs Sleep Total Scatterplot") + 
+  theme_bw() + 
+  ggtitle("Relationship between Body Weight vs Total Sleep Time")
+
+p
+```
+
+
+
+##6##
+```{r}
+p + geom_smooth(method = 'lm', formula = y~x, se = F) 
+```
+
+
+
+
+##7##
+```{r}
+p + geom_smooth(method = 'lm', formula = y~x, se = F) + 
+  geom_smooth(aes(group = 1), method = 'lm', formula = y~x, se = F, col = "black", linetype = "dashed")
+```
+
+
+##8##
+```{r}
+p + geom_smooth(method = 'lm', formula = y~x, se = F) + 
+  geom_smooth(aes(group = 1), method = 'lm', formula = y~x, se = F, col = "black", linetype = "dashed") + 
+
+  scale_color_discrete(name = "Diet")
+  
+```
+
+
+##9##
+```{r}
+ggplot(msleep, aes(x = vore, y = sleep_total, fill = vore))+
+  geom_boxplot() + 
+  scale_fill_manual(breaks = c("carni", "herbi", "insecti", "omni", "NA"), 
+                    
+  values=c("black", "orange2", "skyblue2", "mediumseagreen", "white")) + 
+  xlab("Diet") + 
+  ylab("Sleep Total") + 
+  scale_y_log10() + 
+  theme_bw()
+```
+
+
+
+##10##
+```{r}
+ggplot(msleep, aes(x = bodywt, y = sleep_total)) + 
+  geom_point() +
+  facet_wrap(~ vore) + 
+  geom_smooth(method = 'lm', formula = y ~ x, se = F)+
+  scale_y_log10(name = "Sleep Total") + 
+  scale_x_log10(name = "Body Weight") + 
+  theme_bw()
+```
