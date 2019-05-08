@@ -1,0 +1,230 @@
+##Homework 4##
+
+##Tianqi Luo##
+
+
+
+##Exercise 1
+
+
+**1**
+
+```{r}
+library(Sleuth3)
+data("case1302")
+```
+
+**All the soldiers in these companies are the observational units, the scores of the tests are variables**
+
+
+
+**2**
+```{r}
+library(dplyr)
+case1302 %>%
+  
+  group_by(Company, Treat) %>%
+  summarize(Average = mean(Score)) ->
+  
+  sum1302
+              
+  
+
+sum1302
+  
+```
+
+
+
+**Merge the two functions**
+```{r}
+new1302 = merge(sum1302, case1302)
+```
+
+
+
+**3**
+```{r}
+library(ggplot2)
+ggplot(new1302, aes(Company, Average, color = Treat)) + 
+  geom_point() + 
+  xlab("Company") +
+  ylab("Mean Score") + 
+  scale_color_manual(breaks = c("Control", "Pygmalion"), values = c("black", "orange2")) + 
+  theme_bw() + 
+  geom_count() + 
+  scale_size(range = c(2,3), breaks = seq(1, 2, by = 1)) +
+  labs(color = "Treatment", size = "Number of Observations")
+```
+
+
+**4**
+
+**No, it doesn't make sense since the x-variables are categorical variables, a curve would only be able to tell us the relationship if both variables are continuous variables**
+
+
+##Exercise 2
+
+**1**
+```{r}
+data("midwest")
+```
+
+
+
+**2**
+
+**The observational units are people living in the Midwest.** 
+
+
+
+**3**
+
+**Create a new dataframe with the total population**
+```{r}
+midwest %>%
+  
+  group_by(state) %>%
+  summarize(StateTotalPopulation = sum(poptotal)) ->
+  
+  poptotal
+              
+  
+
+poptotal
+```
+
+
+**Plot**
+```{r}
+ggplot(poptotal, aes(x = state, y = StateTotalPopulation, color = state)) + 
+  geom_point() + 
+  xlab("State") + 
+  ylab("Total Population") + 
+  theme_bw()
+```
+
+
+
+**4**
+
+```{r}
+ggplot(midwest[midwest$poptotal > quantile(midwest$poptotal, 0.10), ], aes(x = log(popdensity), y = log(percollege), color = state)) + 
+  geom_point() +
+  geom_smooth(aes(group = 1), method = 'lm', formula = y~x, se = F, col = "black", linetype = "dotted") + 
+  xlab("Population Density") + 
+  ylab("Percent College")
+```
+
+**5**
+
+**Calculate the adult percentage first**
+```{r}
+midwest %>%
+  
+  group_by(state) %>%
+  summarize(StateTotalPopulation = sum(poptotal), 
+            StateTotalAdultPopulation = sum(popadults)) %>%
+  mutate(percadult = StateTotalAdultPopulation/StateTotalPopulation) ->
+    adultperc
+```
+  
+
+**Plot**
+```{r}
+ggplot(adultperc, aes(x = state, y = percadult, color = state)) + 
+  geom_point() + 
+  theme_bw() + 
+  xlab("State") + 
+  ylab("Adult Percentage")
+```
+
+
+**6**
+```{r}
+unique(midwest$state)
+```
+
+
+**7**
+```{r}
+names = factor(midwest$state)
+levels(names) = list("Illinois" = "IL", "Indiana" = "IN", "Michigan" = "MI",  "Ohio" = "OH", "Wisconsin" = "WI")
+midwest$state = names
+head(midwest)
+```
+
+
+##Exercise 3
+
+
+**1**
+```{r}
+lsumfun = function(x){
+  if(length(x) %% 2 == 0){
+    return(sum(x))}
+  else{
+    return(sum(x[x %% 2 == 0 & !is.na(x)]))
+  }
+}
+```
+
+**Test**
+```{r}
+lsumfun(c(2,3,4,5,NA))
+lsumfun(c(2,3,4,NA,6))
+```
+
+**2**
+```{r}
+georgian = function(x){
+  if(x %% 4 == 0) {
+    if(x %% 100 == 0 & x %% 400 != 0){
+      return("False")
+    }
+    else if(x %% 100 == 0 & x %% 400 == 0){
+      return("True")
+    }
+    else{
+      return("True")
+    }
+  }
+  else{
+    return("False")
+  }
+  }
+```
+
+
+**Test**
+```{r}
+georgian(2)
+georgian(12)
+georgian(200)
+georgian(800)
+```
+
+
+**3**
+```{r}
+score2 = function(a,b){
+  if( length(unique(a)) != length(a) & length(unique(b)) != length(b))
+  {stop("a, b have some repeated elements")}
+  else if(length(unique(a)) != length(a) & length(unique(b)) == length(b))
+  {stop("a has some repeated elements")}
+  else if(length(unique(a)) == length(a) & length(unique(b)) != length(b)) 
+  {stop("b has some repeated elements")}
+  else { k = length(a %in% b [a %in% b == FALSE])
+  j = -length(b %in% a [b %in% a == FALSE])
+  return(k + j)
+    
+  }
+}
+```
+
+
+**Test**
+```{r}
+score2(c(1,2,3), c(1,2,3,4))
+score2(c(1,2,3), c(3,4))
+```
